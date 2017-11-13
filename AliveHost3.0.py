@@ -4,7 +4,7 @@ from subprocess import Popen
 from threading import Thread, Lock
 from re import findall, search
 
-#bot creation
+# bot creation
 token = '437678547:AAGRK9W1eQgGVKawmg0C7MElfy6OFZsYZmc'
 bot = pzgram.Bot(token)
 bot.owner="@Mariob99"
@@ -16,7 +16,8 @@ host_list = list()
 ping_thread_list = list()
 port_thread_list = list()
 
-class Port:
+
+class Port:  # calsse per la gestione delle porte con tutte le caratteristiche necessarie
     def __init__(self, port_number, port_state, port_name):
         self.number = port_number
         self.state = port_state
@@ -31,8 +32,8 @@ class Port:
     def get_name(self):
         return self.name
 
-#class Host per la gestione delle variabili del host
-class Host:
+
+class Host:  # class Host per la gestione delle variabili del host
     def __init__(self, name, ip):
         self.name = name
         self.ip = ip
@@ -43,7 +44,8 @@ class Host:
     def get_name(self):
         return self.name
 
-class ThreadPortList(Thread):  #nmap funziona solo all'interno della scuola, a casa mia non funzia
+
+class ThreadPortList(Thread):  # classe derivata da threading.Thread fatta appositamente per il test nmap con le variabili chat e send per la communicazione tramite bot
     def __init__(self, name, ip, chat, message):
         Thread.__init__(self)
         self.name = name
@@ -81,25 +83,25 @@ class ThreadPortList(Thread):  #nmap funziona solo all'interno della scuola, a c
             self.chat.send('Done for ip {}, detected {}  port opened/filtered!'.format(self.ip,str(len(self.port_list))))
 
 
-class ThreadPing(Thread):
+class ThreadPing(Thread):  # classe derivata da threading.Thread fatta appositamente per il test del ping con le variabili chat e send per la communicazione tramite bot
     def __init__(self, name, addr, chat, message):
         Thread.__init__(self)
-        self.ip = addr # ip server
-        self.name = name # nome server
-        self.back_state = True # 0 se non riceve nessun pachetto, viceversa 1
-        self.alive_thread = True
+        self.ip = addr  # ip server
+        self.name = name  # nome server
+        self.back_state = True  # 0 se non riceve nessun pachetto, viceversa 1
+        self.alive_thread = True  # variabile per arrestare il thread
         self.chat = chat
         self.message = message
 
     def run(self):
-        while self.alive_thread: #finchè è true il thread rimane attivo
+        while self.alive_thread:  # finchè è true il thread rimane attivo
             ping_command = 'ping -n 1 -w 2000 {}'.format(self.ip)
             out_string = Popen(ping_command,stdout=subprocess.PIPE, shell=True).communicate()
-            if search('Ricevuti = 0', str(out_string)) and self.back_state: # ping non andato a buon fine
+            if search('Ricevuti = 0', str(out_string)) and self.back_state:  # ping non andato a buon fine
                 log_string = self.create_log_string(True)
                 self.send_all_msg(log_string)
                 self.back_state = 0
-            elif search('Ricevuti = 1', str(out_string))and not self.back_state:
+            elif search('Ricevuti = 1', str(out_string))and not self.back_state:  # ping andato a buon fine
                 log_string = self.create_log_string(False)
                 self.send_all_msg(log_string)
                 self.back_state = 1
@@ -125,6 +127,7 @@ class ThreadPing(Thread):
     def change_alive_thread(self):
         self.alive_thread = False
 
+
 def create_log_string_init_and_end(start):
     string_formatted = str()
     string_formatted += strftime("%Y-%m-%d %H:%M:%S", localtime())
@@ -134,6 +137,7 @@ def create_log_string_init_and_end(start):
         string_formatted += '  endLog\n'
     return string_formatted
 
+
 def create_host_list():
     global host_list
     with open('hosts.json', 'r') as f:
@@ -142,17 +146,20 @@ def create_host_list():
     for i in data.keys():
         host_list.append(Host(i, data[i]))
 
+
 def create_thread_list(chat, message):
     global host_list
     global ping_thread_list
     for host in host_list:
         ping_thread_list.append(ThreadPing(host.get_name(), host.get_ip(), chat, message))
 
+
 def create_thread_port_list(chat, message):
     global host_list
     global port_thread_list
     for host in host_list:
         port_thread_list.append(ThreadPortList(host.get_name(), host.get_ip(), chat, message))
+
 
 def start_all_thread(chat, message):
     log_string = create_log_string_init_and_end(True)
@@ -166,10 +173,12 @@ def start_all_thread(chat, message):
     for thread in ping_thread_list:
         thread.start()
 
+
 def start_port_thread(chat, message):
     global port_thread_list
     for thread in port_thread_list:
         thread.start()
+
 
 def stop_all_thread(chat, message):
     log_string = create_log_string_init_and_end(False)
@@ -184,27 +193,32 @@ def stop_all_thread(chat, message):
         thread.change_alive_thread()
         thread.join()
 
-def start_command(chat, message):
+
+def start_command(chat, message):  # funzione di prova
     chat.send("Ciao sono PyAliveHost, il bot multifunzione che ti permette di avere informazioni dettagliate sulle reti")
 
-def StartPingCommand(chat, message):
+
+def StartPingCommand(chat, message):  # "interfaccia" di communicazione tra il bot e i vari threads, con questo stoppa tutti thread inerenti al ping
     global host_list
     if len(host_list) == 0:
         create_host_list()
     create_thread_list(chat, message)
     start_all_thread(chat, message)
 
-def StopPingCommand(chat, message):
+
+def StopPingCommand(chat, message):  # "interfaccia" di communicazione tra il bot e i vari threads, con questo stoppa tutti thread inerenti al ping
     stop_all_thread(chat, message)
 
-def SearchPortList(chat, message):
+
+def SearchPortList(chat, message):  # "interfaccia" di communicazione tra il bot e i vari threads, con questo fa partire tutti i thread per cercare i servizi disponibili per ogni host
     global host_list
     if len(host_list) == 0:
         create_host_list()
     create_thread_port_list(chat, message)
     start_port_thread(chat, message)
 
-def RenewHostList(chat, message):
+
+def RenewHostList(chat, message):  # Rinnova la lista degli Host e se è vuota tenta di farla
     global host_list
     if len(host_list) == 0:
         create_host_list()
@@ -212,6 +226,7 @@ def RenewHostList(chat, message):
         host_list.clear()
         create_host_list()
     chat.send('Done')
+
 
 if __name__== "__main__":
     bot.set_commands({'/start': start_command, '/StartPingWork': StartPingCommand, '/StopPingWork': StopPingCommand, '/SearchPortList': SearchPortList, '/RenewHostList': RenewHostList})
