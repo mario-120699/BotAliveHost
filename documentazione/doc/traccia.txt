@@ -1,0 +1,30 @@
+Using python threads and icmp protocol develop an application that monitor activity of a list of remote hosts.
+
+Specs:
+1. Read the host names from a python dictionary "nickName":"ipAddress" saved on a json file named "hosts.json" OK
+2. Write the output to a log text file named "aliveHosts.log" where put a record/line for every changes of the host status.
+   Record format: 
+   YYYY-MM-DD hh:mm:ss, nickName, ipAddress, dead/alive\n
+   Don't use logging module, handle the shared resource "aliveHosts.log" among threads with proper lock. OK
+3. The first record of "aliveHosts.log" must be:
+   YYYY-MM-DD hh:mm:ss, startLog\n OK
+4. The last record of "aliveHosts.log" must be:
+   YYYY-MM-DD hh:mm:ss, endLog\n OK
+5. At every changes of hosts status display this string on the standard output:
+   nickName, ipAddress, dead/alive\n OK
+6. Application must stop at the keyboard hit.
+7. At every changes of hosts status send to your telegram bot the record/line string. OK
+8  OPT. Permit more separate lists of hosts differently named
+9  OPT. For every hosts verify a specific service: transport protocol, port number
+10 OPT. For every hosts verify a list of servicies
+
+Suggestions:
+. Before to begin any coding make tests on python command line consolle.
+. With subprocess use ping command line utility with proper parameters (man ping)
+. Assign one thread for every host
+. Every write on log file from threads must lock and after free the resource
+. To test your app use iptables to enable and disable icmp traffic on pinged host
+. To mantain update log record flush log file on each write.
+. We appreciate any personalization that extends or improves specs of the app or solve the problem in a personal way. 
+. Mandatory is the use of json input file and threads.
+  
