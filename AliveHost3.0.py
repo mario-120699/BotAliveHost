@@ -1,4 +1,6 @@
-import pzgram, json, sys, subprocess
+import pzgram
+import json
+import subprocess
 from time import localtime, strftime
 from subprocess import Popen
 from threading import Thread, Lock
@@ -18,7 +20,7 @@ port_thread_list = list()
 port_thread_single = list()
 
 
-class Port:  # calsse per la gestione delle porte con tutte le caratteristiche necessarie
+class Port:  # classe per la gestione delle porte con tutte le caratteristiche necessarie
     def __init__(self, port_number, port_state, port_name):
         self.number = port_number
         self.state = port_state
@@ -58,7 +60,7 @@ class ThreadPortSingle(Thread):  # classe derivata da threading.Thread fatta app
     def run(self):
         print("Start nmap for {}".format(self.ip))
         command = "nmap -p 22 -v {}".format(self.ip)
-        out_string = Popen(command,stdout=subprocess.PIPE, shell=True).communicate()
+        out_string = Popen(command, stdout=subprocess.PIPE, shell=True).communicate()
         result = findall('([0-9]+)/[a-z]+[ ]+([a-z]+)[ ]+([a-z-]+)', str(out_string))
         for r_e in result:
             port = int(r_e[0])
@@ -71,7 +73,6 @@ class ThreadPortSingle(Thread):  # classe derivata da threading.Thread fatta app
         else:
             print('Done for ip {}, port 22 port is closed!'.format(self.ip))
             self.chat.send('Done for ip {}, port 22 port is closed!'.format(self.ip))
-
 
 
 class ThreadPortList(Thread):  # classe derivata da threading.Thread fatta appositamente per il test nmap con le variabili chat e send per la communicazione tramite bot
@@ -221,6 +222,7 @@ def start_single_port_thread(chat, message):
     for thread in port_thread_single:
         thread.start()
 
+
 def stop_all_thread(chat, message):
     log_string = create_log_string_init_and_end(False)
     global log_lock
@@ -236,11 +238,12 @@ def stop_all_thread(chat, message):
 
 
 def start_command(chat, message):  # funzione di prova
-    chat.send("Ciao sono PyAliveHost, il bot multifunzione che ti permette di avere informazioni dettagliate sulle reti\nPer vedere i singoli comandi digitale /help")
+    chat.send("Ciao sono PyAliveHost, il bot multifunzione che ti permette di avere informazioni " +
+              "dettagliate sulle reti\nPer vedere i singoli comandi digitale /help")
 
 
-def StartPingCommand(chat, message):  # "interfaccia" di communicazione tra il bot e i vari threads, con questo stoppa tutti thread inerenti al ping
-    global host_list
+def StartPingCommand(chat, message):  # "interfaccia" di communicazione tra il bot e i vari threads,
+    global host_list                  # con questo stoppa tutti thread inerenti al ping
     if len(host_list) == 0:
         create_host_list()
     create_thread_list(chat, message)
@@ -259,13 +262,6 @@ def SearchPortList(chat, message):  # "interfaccia" di communicazione tra il bot
     start_port_thread(chat, message)
 
 
-def SearchPort22(chat, message):
-    global host_list
-    if len(host_list) == 0:
-        create_host_list()
-    create_thread_port_single_list(chat, message)
-    start_single_port_thread(chat, message)
-
 def RenewHostList(chat, message):  # Rinnova la lista degli Host e se è vuota tenta di farla
     global host_list
     if len(host_list) == 0:
@@ -274,6 +270,14 @@ def RenewHostList(chat, message):  # Rinnova la lista degli Host e se è vuota t
         host_list.clear()
         create_host_list()
     chat.send('Done')
+
+
+def SearchPort22(chat, message):
+    global host_list
+    if len(host_list) == 0:
+        create_host_list()
+    create_thread_port_single_list(chat, message)
+    start_single_port_thread(chat, message)
 
 
 if __name__== "__main__":
