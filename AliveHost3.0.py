@@ -49,17 +49,18 @@ class Host:  # class Host per la gestione delle variabili del host
 
 
 class ThreadPortSingle(Thread):  # classe derivata da threading.Thread fatta appositamente per il test nmap con le variabili chat e send per la communicazione tramite bot
-    def __init__(self, name, ip, chat, message):
+    def __init__(self, name, ip, port, chat, message):
         Thread.__init__(self)
         self.name = name
         self.ip = ip
         self.port_list = list()
         self.chat = chat
         self.message = message
+        self.port = port
 
     def run(self):
         print("Start nmap for {}".format(self.ip))
-        command = "nmap -p 22 -v {}".format(self.ip)
+        command = "nmap -p {} -v {}".format(self.port, self.ip)
         out_string = Popen(command, stdout=subprocess.PIPE, shell=True).communicate()
         result = findall('([0-9]+)/[a-z]+[ ]+([a-z]+)[ ]+([a-z-]+)', str(out_string))
         for r_e in result:
@@ -68,15 +69,15 @@ class ThreadPortSingle(Thread):  # classe derivata da threading.Thread fatta app
             name = str(r_e[2])
             self.port_list.append(Port(port, state, name))
         if self.port_list:
-            print('Done for ip {}, port 22 port is opened!'.format(self.ip))
-            self.chat.send('Done for ip {}, port 22 port is opened!'.format(self.ip))
+            print('Done for ip {}, port {} port is opened/filtered!'.format(self.ip, self.port))
+            self.chat.send('Done for ip {}, port {} port is opened/filtered!'.format(self.ip, self.port))
         else:
-            print('Done for ip {}, port 22 port is closed!'.format(self.ip))
-            self.chat.send('Done for ip {}, port 22 port is closed!'.format(self.ip))
+            print('Done for ip {}, port {} port is closed!'.format(self.ip, self.port))
+            self.chat.send('Done for ip {}, port {} port is closed!'.format(self.ip, self.port))
 
 
-class ThreadPortList(Thread):  # classe derivata da threading.Thread fatta appositamente per il test nmap con le variabili chat e send per la communicazione tramite bot
-    def __init__(self, name, ip, chat, message):
+class ThreadPortList(Thread):                        # classe derivata da threading.Thread fatta appositamente per il test
+    def __init__(self, name, ip, chat, message):     #  nmap con le variabili chat e send per la communicazione tramite bot
         Thread.__init__(self)
         self.name = name
         self.ip = ip
@@ -177,11 +178,11 @@ def create_host_list():
         host_list.append(Host(i, data[i]))
 
 
-def create_thread_port_single_list(chat, message):
+def create_thread_port_single_list(chat, message, port):
     global host_list
     global port_thread_single
     for host in host_list:
-        port_thread_single.append(ThreadPortSingle(host.get_name(), host.get_ip(), chat, message))
+        port_thread_single.append(ThreadPortSingle(host.get_name(), host.get_ip(), port, chat, message))
 
 
 def create_thread_list(chat, message):
@@ -208,18 +209,21 @@ def start_all_thread(chat, message):
     print(log_string)
     global ping_thread_list
     for thread in ping_thread_list:
+        thread.daemon = True
         thread.start()
 
 
 def start_port_thread(chat, message):
     global port_thread_list
     for thread in port_thread_list:
+        thread.daemon = True
         thread.start()
 
 
 def start_single_port_thread(chat, message):
     global port_thread_single
     for thread in port_thread_single:
+        thread.daemon = True
         thread.start()
 
 
@@ -234,7 +238,6 @@ def stop_all_thread(chat, message):
     global ping_thread_list
     for thread in ping_thread_list:
         thread.change_alive_thread()
-        thread.join()
 
 
 def start_command(chat, message):  # funzione di prova
@@ -272,14 +275,22 @@ def RenewHostList(chat, message):  # Rinnova la lista degli Host e se è vuota t
     chat.send('Done')
 
 
-def SearchPort22(chat, message):
+def SearchPort(chat, message):
     global host_list
     if len(host_list) == 0:
         create_host_list()
-    create_thread_port_single_list(chat, message)
+    s = message.text.split()
+    try:
+        if int(s[1]) < 0 or int(s[1]) > 65535:
+            chat.send("Errore, Porta fuori range!")
+            return
+    except Exception as e:
+        chat.send(str(e) + "\nLa sintassi corretta è /SearchSpecificPort XX\ndove le X stanno ad indicare una porta che va da 1 a 65535")
+        return
+    create_thread_port_single_list(chat, message, s[1])
     start_single_port_thread(chat, message)
 
 
-if __name__== "__main__":
-    bot.set_commands({'/start': start_command, '/StartPingWork': StartPingCommand, '/StopPingWork': StopPingCommand, '/SearchPortList': SearchPortList, '/RenewHostList': RenewHostList, '/SearchPort22': SearchPort22})
+if __name__ == "__main__":
+    bot.set_commands({'/start': start_command, '/StartPingWork': StartPingCommand, '/StopPingWork': StopPingCommand, '/SearchPortList': SearchPortList, '/RenewHostList': RenewHostList, '/SearchSpecificPort': SearchPort})
     bot.run()

@@ -4,3 +4,19 @@
 2017-11-16 18:44:33, vpn.domain.com, 161.66.1.96  DEAD
 2017-11-16 18:44:33, sql.domain.com, 16.4.99.77  DEAD
 2017-11-16 18:45:08  endLog
+2017-11-23 08:54:03  startLog
+2017-11-23 08:54:05, vpn.domain.com, 161.66.1.96  DEAD
+2017-11-23 08:54:05, www.domain.com, 216.14.13.2  DEAD
+2017-11-23 08:54:05, sql.domain.com, 16.4.99.77  DEAD
+2017-11-23 08:57:01, Mario's VM, 192.168.2.31  DEAD
+2017-11-23 09:03:26  endLog
+2017-11-23 09:03:33  startLog
+2017-11-23 09:03:35, www.domain.com, 216.14.13.2  DEAD
+2017-11-23 09:03:35, Mario's VM, 192.168.2.31  DEAD
+2017-11-23 09:03:35, sql.domain.com, 16.4.99.77  DEAD
+2017-11-23 09:03:35, vpn.domain.com, 161.66.1.96  DEAD
+2017-11-23 09:10:01  startLog
+2017-11-23 09:10:03, www.domain.com, 216.14.13.2  DEAD
+2017-11-23 09:10:03, Mario's VM, 192.168.2.31  DEAD
+2017-11-23 09:10:03, vpn.domain.com, 161.66.1.96  DEAD
+2017-11-23 09:10:03, sql.domain.com, 16.4.99.77  DEAD
